@@ -63,7 +63,7 @@ function findAgentForMessage(text) {
 async function askGemini(question, systemPrompt = '') {
   try {
     // Modelos disponibles: gemini-1.5-flash, gemini-1.5-pro, gemini-2.0-flash-exp
-    const MODEL_ID = 'gemini-1.5-flash';
+    const MODEL_ID = 'gemini-2.5-flash';
     
     const prompt = systemPrompt ? `${systemPrompt}\n\nUsuario: ${question}` : question;
 
