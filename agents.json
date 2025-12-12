@@ -1,0 +1,11 @@
+[
+    {
+        "id": "default",
+        "name": "Asistente General",
+        "systemPrompt": "Eres un asistente útil y amable.",
+        "keywords": [
+            "*"
+        ],
+        "isDefault": true
+    }
+]
