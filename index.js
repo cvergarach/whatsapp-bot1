@@ -11,7 +11,6 @@ app.use(express.json());
 // ============ CONFIGURACIÓN ============
 const GEMINI_API_KEY = 'AIzaSyBOr9OM1pnisKdfcKijgtND5xGw2fwxK-U';
 const PORT = process.env.PORT || 3000;
-// En Render, solo /tmp es escribible si no usas discos persistentes
 const AGENTS_FILE = path.join('/tmp', 'agents.json');
 
 // ============ ESTADO DE WHATSAPP ============
@@ -30,7 +29,6 @@ if (!fs.existsSync(authDir)) {
 // ============ GESTIÓN DE AGENTES ============
 function getAgents() {
   if (!fs.existsSync(AGENTS_FILE)) {
-    // Crear agente por defecto si no existe el archivo
     const defaultAgent = [{
       id: "default",
       name: "Asistente General",
@@ -51,7 +49,6 @@ function saveAgents(agents) {
 
 function findAgentForMessage(text) {
   const agents = getAgents();
-  // Buscar agente por palabra clave
   const matchedAgent = agents.find(agent =>
     agent.keywords && agent.keywords.some(keyword =>
       keyword !== '*' && text.toLowerCase().includes(keyword.toLowerCase())
@@ -59,18 +56,19 @@ function findAgentForMessage(text) {
   );
 
   if (matchedAgent) return matchedAgent;
-
-  // Si no hay coincidencia, usar el default
   return agents.find(agent => agent.isDefault) || agents[0];
 }
 
 // ============ FUNCIÓN PARA LLAMAR A GEMINI ============
 async function askGemini(question, systemPrompt = '') {
   try {
+    // Modelos disponibles: gemini-1.5-flash, gemini-1.5-pro, gemini-2.0-flash-exp
+    const MODEL_ID = 'gemini-1.5-flash';
+    
     const prompt = systemPrompt ? `${systemPrompt}\n\nUsuario: ${question}` : question;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,10 +92,10 @@ async function askGemini(question, systemPrompt = '') {
     }
 
     console.error('❌ Respuesta inesperada de Gemini:', JSON.stringify(data, null, 2));
-    return 'Lo siento, no pude procesar tu mensaje (sin candidatos).';
+    return 'Lo siento, no pude procesar tu mensaje.';
   } catch (error) {
-    console.error('❌ Error de red/código llamando a Gemini:', error);
-    return 'Hubo un error interno al procesar tu mensaje.';
+    console.error('❌ Error llamando a Gemini:', error);
+    return 'Hubo un error al procesar tu mensaje. Intenta de nuevo.';
   }
 }
 
@@ -115,10 +113,8 @@ async function connectToWhatsApp() {
       markOnlineOnConnect: true,
     });
 
-    // Guardar credenciales cuando cambien
     sock.ev.on('creds.update', saveCreds);
 
-    // Manejar eventos de conexión
     sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
 
@@ -140,7 +136,7 @@ async function connectToWhatsApp() {
           console.log(`🔄 Reintentando conexión (${connectionAttempts}/${MAX_ATTEMPTS})...`);
           setTimeout(() => connectToWhatsApp(), 5000);
         } else if (connectionAttempts >= MAX_ATTEMPTS) {
-          console.log('❌ Máximo de intentos alcanzado. Por favor escanea el QR nuevamente.');
+          console.log('❌ Máximo de intentos alcanzado. Escanea el QR nuevamente.');
           qrCode = null;
           connectionAttempts = 0;
         }
@@ -171,7 +167,7 @@ async function connectToWhatsApp() {
         await sock.sendPresenceUpdate('composing', from);
 
         const agent = findAgentForMessage(text);
-        console.log(`🤖 Usando agente: ${agent ? agent.name : 'Ninguno'}`);
+        console.log(`🤖 Usando agente: ${agent ? agent.name : 'Default'}`);
 
         const response = await askGemini(text, agent ? agent.systemPrompt : '');
 
@@ -194,8 +190,24 @@ async function connectToWhatsApp() {
 
 // ============ RUTAS DE LA API ============
 
-// Servir archivos estáticos del frontend
 app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    connected: isConnected,
+    message: isConnected 
+      ? '✅ Bot conectado a WhatsApp' 
+      : '⏳ Esperando conexión. Ve a /qr para obtener el código',
+    qrAvailable: qrCode !== null,
+    endpoints: {
+      qr: '/qr - Obtener código QR',
+      status: '/status - Estado de conexión',
+      restart: '/restart - Reiniciar conexión',
+      agents: '/api/agents - Gestionar agentes'
+    }
+  });
+});
 
 app.get('/api/agents', (req, res) => {
   res.json(getAgents());
@@ -293,7 +305,11 @@ app.get('/restart', (req, res) => {
 // ============ INICIAR SERVIDOR ============
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`🌐 Dashboard: http://localhost:${PORT}`);
+  console.log(`🌐 Endpoints disponibles:`);
+  console.log(`   - /qr (Obtener código QR)`);
+  console.log(`   - /status (Ver estado)`);
+  console.log(`   - /restart (Reiniciar)`);
+  console.log(`   - /api/agents (Gestionar agentes)`);
   console.log(`📱 Iniciando conexión a WhatsApp...`);
   connectToWhatsApp();
 });
