@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Agentes - WhatsApp Bot</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Configuración de Agentes</h1>
+            <div class="status-badge" id="connectionStatus">
+                <span class="status-dot"></span>
+                <span id="statusText">Verificando...</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="agents-list-section">
+                <div class="section-header">
+                    <h2>Agentes Activos</h2>
+                    <button id="createAgentBtn" class="btn-primary">+ Nuevo Agente</button>
+                </div>
+                <div id="agentsList" class="agents-grid">
+                    <!-- Los agentes se cargarán aquí -->
+                </div>
+            </div>
+
+            <div class="qr-section">
+                <h2>📱 Conexión WhatsApp</h2>
+                <div id="qrContainer" class="qr-container">
+                    <p>Cargando estado...</p>
+                </div>
+                <button id="restartBtn" class="btn-secondary">Reiniciar Conexión</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para Crear/Editar Agente -->
+    <div id="agentModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Nuevo Agente</h2>
+            <form id="agentForm">
+                <input type="hidden" id="agentId">
+                
+                <div class="form-group">
+                    <label for="agentName">Nombre del Agente</label>
+                    <input type="text" id="agentName" required placeholder="Ej: Vendedor, Soporte Técnico">
+                </div>
+
+                <div class="form-group">
+                    <label for="agentPrompt">System Prompt (Instrucciones)</label>
+                    <textarea id="agentPrompt" required rows="6" placeholder="Describe cómo debe comportarse el agente..."></textarea>
+                    <small>Instrucciones detalladas sobre la personalidad y conocimientos del agente.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="agentKeywords">Palabras Clave (separadas por coma)</label>
+                    <input type="text" id="agentKeywords" placeholder="ventas, precio, comprar">
+                    <small>Si el mensaje del usuario contiene alguna de estas palabras, este agente responderá. Usa * para responder a todo.</small>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="agentDefault">
+                    <label for="agentDefault">Hacer agente por defecto</label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar Agente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
