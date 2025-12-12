@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 
 // ============ CONFIGURACIÓN ============
-const GEMINI_API_KEY = 'AIzaSyBOr9OM1pnisKdfcKijgtND5xGw2fwxK-U';
+//const GEMINI_API_KEY = 'AIzaSyBOr9OM1pnisKdfcKijgtND5xGw2fwxK-U';
 const PORT = process.env.PORT || 3000;
 const AGENTS_FILE = path.join('/tmp', 'agents.json');
 
