@@ -9,9 +9,15 @@ const app = express();
 app.use(express.json());
 
 // ============ CONFIGURACIÓN ============
-//const GEMINI_API_KEY = 'AIzaSyBOr9OM1pnisKdfcKijgtND5xGw2fwxK-U';
 const PORT = process.env.PORT || 3000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // ✅ AGREGADO
 const AGENTS_FILE = path.join('/tmp', 'agents.json');
+
+// Validar que existe la API key
+if (!GEMINI_API_KEY) {
+  console.error('❌ ERROR: GEMINI_API_KEY no está configurada en las variables de ambiente');
+  process.exit(1);
+}
 
 // ============ ESTADO DE WHATSAPP ============
 let sock;
@@ -62,9 +68,6 @@ function findAgentForMessage(text) {
 // ============ FUNCIÓN PARA LLAMAR A GEMINI ============
 async function askGemini(question, systemPrompt = '') {
   try {
-    // Modelos disponibles: gemini-1.5-flash, gemini-1.5-pro, gemini-2.0-flash-exp
-    const MODEL_ID = 'gemini-2.5-flash';
-    
     const prompt = systemPrompt ? `${systemPrompt}\n\nUsuario: ${question}` : question;
 
     const response = await fetch(
