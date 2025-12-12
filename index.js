@@ -84,14 +84,20 @@ async function askGemini(question, systemPrompt = '') {
 
     const data = await response.json();
 
+    if (!response.ok) {
+      console.error('❌ Error API Gemini:', JSON.stringify(data, null, 2));
+      return `Error del sistema: ${data.error?.message || 'Error desconocido de la API'}`;
+    }
+
     if (data.candidates && data.candidates[0]) {
       return data.candidates[0].content.parts[0].text;
     }
 
-    return 'Lo siento, no pude procesar tu mensaje.';
+    console.error('❌ Respuesta inesperada de Gemini:', JSON.stringify(data, null, 2));
+    return 'Lo siento, no pude procesar tu mensaje (sin candidatos).';
   } catch (error) {
-    console.error('Error llamando a Gemini:', error);
-    return 'Hubo un error al procesar tu mensaje. Intenta de nuevo.';
+    console.error('❌ Error de red/código llamando a Gemini:', error);
+    return 'Hubo un error interno al procesar tu mensaje.';
   }
 }
 
